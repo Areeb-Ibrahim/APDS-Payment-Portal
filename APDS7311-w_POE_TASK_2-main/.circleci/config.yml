@@ -1,5 +1,5 @@
 version: 2.1
-
+# Updated config with flexible path detection
 jobs:
   build:
     docker:
