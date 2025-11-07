@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   sonarcloud-analysis:
     docker:
-      - image: cimg/node:18.17
+      - image: cimg/node:18.17-browsers  # Browsers variant includes Java
     working_directory: ~/project  # Repo root
     steps:
       - checkout
@@ -18,13 +18,10 @@ jobs:
               ls -la ~/project  # Shows what's actually there
               exit 1
             fi
-      # Skipped: Install Dependencies (no need for static scan)
-      # Skipped: Run Tests (optional anyway)
       - run:
           name: Run SonarCloud Analysis
           command: |
-            npm install -g sonar-scanner
-            sonar-scanner \
+            npx sonar-scanner \
               -Dsonar.organization=Areeb-Ibrahim \
               -Dsonar.projectKey=Areeb-Ibrahim_APDS-Payment-Portal \
               -Dsonar.sources=. \
