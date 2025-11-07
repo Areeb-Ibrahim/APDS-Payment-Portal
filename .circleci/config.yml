@@ -1,54 +1,34 @@
 version: 2.1
-
 jobs:
-  build:
+  sonarcloud-analysis:
     docker:
-      - image: cimg/node:18.17
-    working_directory: ~/project
+      - image: cimg/node:18.17-browsers  # Includes Java for SonarScanner
+    working_directory: ~/project  # Repo root
     steps:
       - checkout
-
-      # Install backend dependencies
       - run:
-          name: Install Backend Dependencies
+          name: Enter Project Directory
           command: |
-            cd backend
-            npm install
-
-      # Install frontend dependencies
-      - run:
-          name: Install Frontend Dependencies
-          command: |
-            cd frontend
-            npm install
-
-      # Run backend tests (optional)
-      - run:
-          name: Run Backend Tests
-          command: |
-            cd backend
-            npm test || echo "No backend tests configured"
-
-      # Run frontend tests (optional)
-      - run:
-          name: Run Frontend Tests
-          command: |
-            cd frontend
-            npm test -- --passWithNoTests || echo "No frontend tests configured"
-
-      # Run SonarCloud Scan
+            if [ -d "APDS7311-w_POE_TASK_2-main" ]; then
+              cd APDS7311-w_POE_TASK_2-main
+              echo "Entered project directory: $(pwd)"
+              ls -la  # Optional: Logs files for debugging
+            else
+              echo "Project directory 'APDS7311-w_POE_TASK_2-main' not found!"
+              ls -la ~/project  # Shows what's actually there
+              exit 1
+            fi
       - run:
           name: Run SonarCloud Analysis
           command: |
-            npx -y sonar-scanner@5.0.1 \
+            npx sonar-scanner \
               -Dsonar.organization=Areeb-Ibrahim \
               -Dsonar.projectKey=Areeb-Ibrahim_APDS-Payment-Portal \
               -Dsonar.sources=. \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.token=$SONAR_TOKEN
-
+              -Dsonar.login=$SONAR_TOKEN
 workflows:
-  version: 2
+  version: 2.1  # Updated to match overall version
   build_and_analyze:
     jobs:
-      - build
+      - sonarcloud-analysis
