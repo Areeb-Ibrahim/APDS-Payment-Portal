@@ -49,7 +49,7 @@ jobs:
               cd frontend
             elif [ -d "APDS7311-w_POE_TASK_2-Main/frontend" ]; then
               echo "Found frontend in APDS7311-w_POE_TASK_2-Main/"
-              cd APDS7311-w_POE_TASK_3-Main/frontend
+              cd APDS7311-w_POE_TASK_2-Main/frontend
             else
               echo "ERROR: Cannot find frontend directory"
               ls -la
