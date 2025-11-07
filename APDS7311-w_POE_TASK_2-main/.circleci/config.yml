@@ -8,74 +8,44 @@ jobs:
     steps:
       - checkout
 
-      # Debug: Show directory structure
+      # Navigate to the correct directory
       - run:
-          name: Debug - Show Directory Structure
-          command: |
-            echo "Current directory:"
-            pwd
-            echo "Files in current directory:"
-            ls -la
-            echo "Looking for backend and frontend:"
-            find . -maxdepth 2 -type d -name "backend" -o -name "frontend"
+          name: Set Working Directory
+          command: cd APDS7311-w_POE_TASK_2-Main && pwd
 
       # Install backend dependencies
       - run:
           name: Install Backend Dependencies
           command: |
-            if [ -d "backend" ]; then
-              cd backend
-            elif [ -d "APDS7311-w_POE_TASK_2-Main/backend" ]; then
-              cd APDS7311-w_POE_TASK_2-Main/backend
-            else
-              echo "ERROR: Cannot find backend directory"
-              exit 1
-            fi
+            cd APDS7311-w_POE_TASK_3-Main/backend
             npm install
 
       # Install frontend dependencies
       - run:
           name: Install Frontend Dependencies
           command: |
-            if [ -d "frontend" ]; then
-              cd frontend
-            elif [ -d "APDS7311-w_POE_TASK_2-Main/frontend" ]; then
-              cd APDS7311-w_POE_TASK_2-Main/frontend
-            else
-              echo "ERROR: Cannot find frontend directory"
-              exit 1
-            fi
+            cd APDS7311-w_POE_TASK_2-Main/frontend
             npm install
 
       # Run backend tests (optional)
       - run:
           name: Run Backend Tests
           command: |
-            if [ -d "backend" ]; then
-              cd backend
-            elif [ -d "APDS7311-w_POE_TASK_2-Main/backend" ]; then
-              cd APDS7311-w_POE_TASK_2-Main/backend
-            fi
+            cd APDS7311-w_POE_TASK_2-Main/backend
             npm test || echo "No backend tests configured"
 
       # Run frontend tests (optional)
       - run:
           name: Run Frontend Tests
           command: |
-            if [ -d "frontend" ]; then
-              cd frontend
-            elif [ -d "APDS7311-w_POE_TASK_2-Main/frontend" ]; then
-              cd APDS7311-w_POE_TASK_2-Main/frontend
-            fi
+            cd APDS7311-w_POE_TASK_2-Main/frontend
             npm test -- --passWithNoTests || echo "No frontend tests configured"
 
       # Run SonarCloud Scan
       - run:
           name: Run SonarCloud Analysis
           command: |
-            if [ -d "APDS7311-w_POE_TASK_2-Main" ]; then
-              cd APDS7311-w_POE_TASK_2-Main
-            fi
+            cd APDS7311-w_POE_TASK_2-Main
             npx -y sonar-scanner@5.0.1 \
               -Dsonar.organization=Areeb-Ibrahim \
               -Dsonar.projectKey=Areeb-Ibrahim_APDS-Payment-Portal \
