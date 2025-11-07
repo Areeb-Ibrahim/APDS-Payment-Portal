@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   sonarcloud-analysis:
     docker:
-      - image: cimg/node:18.17-browsers  # Browsers variant includes Java
+      - image: cimg/node:18.17-browsers  # Includes Java for SonarScanner
     working_directory: ~/project  # Repo root
     steps:
       - checkout
@@ -28,7 +28,7 @@ jobs:
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.login=$SONAR_TOKEN
 workflows:
-  version: 2
+  version: 2.1  # Updated to match overall version
   build_and_analyze:
     jobs:
       - sonarcloud-analysis
