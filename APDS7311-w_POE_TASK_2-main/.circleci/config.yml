@@ -1,4 +1,5 @@
 version: 2.1
+
 # Updated config with flexible path detection
 jobs:
   build:
@@ -27,69 +28,82 @@ jobs:
       - run:
           name: Install Backend Dependencies
           command: |
-            if [ -d "backend" ]; then
-              echo "Found backend at root level"
-              cd backend
-            elif [ -d "APDS7311-w_POE_TASK_2-Main/backend" ]; then
-              echo "Found backend in APDS7311-w_POE_TASK_3-Main/"
-              cd APDS7311-w_POE_TASK_2-Main/backend
-            else
-              echo "ERROR: Cannot find backend directory"
-              ls -la
+            # Find backend directory dynamically
+            BACKEND_PATH=$(find . -type d -name "backend" -not -path "/node_modules/" | head -1)
+            
+            if [ -z "$BACKEND_PATH" ]; then
+              echo "ERROR: Cannot find backend directory anywhere"
+              echo "Current directory structure:"
+              find . -maxdepth 3 -type d
               exit 1
             fi
+            
+            echo "Found backend at: $BACKEND_PATH"
+            cd "$BACKEND_PATH"
             npm install
 
       # Install frontend dependencies
       - run:
           name: Install Frontend Dependencies
           command: |
-            if [ -d "frontend" ]; then
-              echo "Found frontend at root level"
-              cd frontend
-            elif [ -d "APDS7311-w_POE_TASK_2-Main/frontend" ]; then
-              echo "Found frontend in APDS7311-w_POE_TASK_2-Main/"
-              cd APDS7311-w_POE_TASK_2-Main/frontend
-            else
-              echo "ERROR: Cannot find frontend directory"
-              ls -la
+            # Find frontend directory dynamically
+            FRONTEND_PATH=$(find . -type d -name "frontend" -not -path "/node_modules/" | head -1)
+            
+            if [ -z "$FRONTEND_PATH" ]; then
+              echo "ERROR: Cannot find frontend directory anywhere"
+              echo "Current directory structure:"
+              find . -maxdepth 3 -type d
               exit 1
             fi
+            
+            echo "Found frontend at: $FRONTEND_PATH"
+            cd "$FRONTEND_PATH"
             npm install
 
       # Run backend tests (optional)
       - run:
           name: Run Backend Tests
           command: |
-            if [ -d "backend" ]; then
-              cd backend
-            elif [ -d "APDS7311-w_POE_TASK_2-Main/backend" ]; then
-              cd APDS7311-w_POE_TASK_2-Main/backend
+            # Find backend directory dynamically
+            BACKEND_PATH=$(find . -type d -name "backend" -not -path "/node_modules/" | head -1)
+            
+            if [ -n "$BACKEND_PATH" ]; then
+              cd "$BACKEND_PATH"
+              npm test || echo "No backend tests configured"
+            else
+              echo "Skipping backend tests - directory not found"
             fi
-            npm test || echo "No backend tests configured"
 
       # Run frontend tests (optional)
       - run:
           name: Run Frontend Tests
           command: |
-            if [ -d "frontend" ]; then
-              cd frontend
-            elif [ -d "APDS7311-w_POE_TASK_2-Main/frontend" ]; then
-              cd APDS7311-w_POE_TASK_2-Main/frontend
+            # Find frontend directory dynamically
+            FRONTEND_PATH=$(find . -type d -name "frontend" -not -path "/node_modules/" | head -1)
+            
+            if [ -n "$FRONTEND_PATH" ]; then
+              cd "$FRONTEND_PATH"
+              npm test -- --passWithNoTests || echo "No frontend tests configured"
+            else
+              echo "Skipping frontend tests - directory not found"
             fi
-            npm test -- --passWithNoTests || echo "No frontend tests configured"
 
       # Run SonarCloud Scan
       - run:
           name: Run SonarCloud Analysis
           command: |
-            # Navigate to project root if needed
-            if [ -d "APDS7311-w_POE_TASK_2-Main" ]; then
-              echo "Running SonarCloud from APDS7311-w_POE_TASK_3-Main/"
-              cd APDS7311-w_POE_TASK_2-Main
+            # Find the project root (where backend and frontend are)
+            BACKEND_PATH=$(find . -type d -name "backend" -not -path "/node_modules/" | head -1)
+            
+            if [ -n "$BACKEND_PATH" ]; then
+              # Navigate to parent directory of backend
+              PROJECT_ROOT=$(dirname "$BACKEND_PATH")
+              echo "Running SonarCloud from: $PROJECT_ROOT"
+              cd "$PROJECT_ROOT"
             else
-              echo "Running SonarCloud from root"
+              echo "Running SonarCloud from current directory"
             fi
+            
             npx -y sonar-scanner@5.0.1 \
               -Dsonar.organization=Areeb-Ibrahim \
               -Dsonar.projectKey=Areeb-Ibrahim_APDS-Payment-Portal \
