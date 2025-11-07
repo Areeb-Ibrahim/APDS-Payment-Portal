@@ -26,12 +26,13 @@ jobs:
             unzip -q sonar-scanner-cli-7.3.0.5189-linux-x64.zip
             # Make executable and run from project dir
             chmod +x sonar-scanner-7.3.0.5189-linux-x64/bin/sonar-scanner
+            echo "Scanning from: $(pwd)"
             ./sonar-scanner-7.3.0.5189-linux-x64/bin/sonar-scanner \
               -Dsonar.organization=areeb-ibrahim \
               -Dsonar.projectKey=Areeb-Ibrahim_APDS-Payment-Portal \
               -Dsonar.sources=. \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN
+              -Dsonar.token=$SONAR_TOKEN  # Uses env var directly (no WARN)
 workflows:
   version: 2.1
   build_and_analyze:
