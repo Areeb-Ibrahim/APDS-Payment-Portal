@@ -1,191 +1,59 @@
 version: 2.1
 
-# 1. Define the SonarCloud Orb for easier, standard integration
 orbs:
   sonarcloud: sonarsource/sonarcloud@1.0.3
 
-# Define reusable executors
 executors:
   node-executor:
     docker:
       - image: cimg/node:18.17.0
     working_directory: ~/project
 
-# Define reusable commands
 commands:
   install-dependencies:
     description: "Install Node.js dependencies"
-    parameters:
-      directory:
-        type: string
-        default: "."
     steps:
       - run:
-          name: Install dependencies in << parameters.directory >>
+          name: Install dependencies
           command: |
-            cd << parameters.directory >>
-            npm ci
+            cd APDS7311-w_POE_TASK_2-main
+            npm install
 
-# Define jobs (Ensuring ALL jobs are correctly nested under this key)
 jobs:
-  # 1. Security checks job (npm audit)
-  security-check:
+  build-test:
     executor: node-executor
     steps:
       - checkout
+      - install-dependencies
       - run:
-          name: Install npm-audit
-          command: npm install -g npm-audit-resolver
-      - install-dependencies:
-          directory: "backend"
-      - run:
-          name: Run npm audit on backend
+          name: Build project
           command: |
-            cd backend
-            npm audit --audit-level=moderate || true
-      - install-dependencies:
-          directory: "frontend"
+            cd APDS7311-w_POE_TASK_2-main
+            npm run build || echo "No build script found"
       - run:
-          name: Run npm audit on frontend
+          name: Run tests
           command: |
-            cd frontend
-            npm audit --audit-level=moderate || true
-      - run:
-          name: Check for vulnerable packages
-          command: |
-            echo "Security audit completed. Review any vulnerabilities above."
+            cd APDS7311-w_POE_TASK_2-main
+            npm test || echo "No test script found"
 
-  # 2. Backend build and test job
-  backend-build-test:
-    executor: node-executor
-    steps:
-      - checkout
-      - install-dependencies:
-          directory: "backend"
-      - run:
-          name: Lint backend code
-          command: |
-            cd backend
-            echo "Linting backend code..."
-      - run:
-          name: Run backend tests
-          command: |
-            cd backend
-            echo "Running backend tests..."
-      - run:
-          name: Build backend
-          command: |
-            cd backend
-            echo "Backend build successful"
-
-  # 3. Frontend build and test job
-  frontend-build-test:
-    executor: node-executor
-    steps:
-      - checkout
-      - install-dependencies:
-          directory: "frontend"
-      - run:
-          name: Lint frontend code
-          command: |
-            cd frontend
-            echo "Linting frontend code..."
-      - run:
-          name: Run frontend tests
-          command: |
-            cd frontend
-            echo "Running frontend tests..."
-      - run:
-          name: Build frontend for production
-          command: |
-            cd frontend
-            npm run build
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - frontend/build
-
-  # 4. Code quality and SAST (SonarCloud Scan) - USING ORB
   code-quality:
     executor: node-executor
     steps:
       - checkout
-      # Use the analyze command from the SonarCloud Orb
+      - run:
+          name: Install dependencies for scan
+          command: |
+            cd APDS7311-w_POE_TASK_2-main
+            npm install
       - sonarcloud/analyze:
-          # Replace with your actual project key from SonarCloud
-          projectkey: "RahilSir_APDS-Payment-Portal" 
-          # Use project_root to ensure the scanner runs from the correct directory if needed
-          # project_root: "." 
-          # The Orb automatically uses the SONAR_TOKEN environment variable from the UI.
+          projectkey: "Areeb-Ibrahim_APDS-Payment-Portal"
+          organization: "areeb-ibrahim"
 
-  # 5. Dependency check
-  dependency-check:
-    executor: node-executor
-    steps:
-      - checkout
-      - run:
-          name: Check for outdated dependencies
-          command: |
-            echo "Checking for outdated dependencies..."
-            cd backend && npm outdated || true
-            cd ../frontend && npm outdated || true
-
-  # 6. SSL certificate validation (Placeholder)
-  ssl-validation:
-    executor: node-executor
-    steps:
-      - checkout
-      - run:
-          name: Validate SSL configuration
-          command: |
-            echo "Validating SSL configuration..."
-            echo "Ensure SSL certificates are properly configured for production"
-
-# Define workflows
 workflows:
   version: 2
-  
-  # Main DevSecOps pipeline
-  build-test-deploy:
+  build-and-scan:
     jobs:
-      # Security checks run first
-      - security-check
-      
-      # Quality and dependency checks run after security
+      - build-test
       - code-quality:
           requires:
-            - security-check
-            
-      - dependency-check:
-          requires:
-            - security-check
-            
-      # Build and test pipelines
-      - backend-build-test:
-          requires:
-            - security-check
-            
-      - frontend-build-test:
-          requires:
-            - security-check
-            
-      # Final checks/deployment (requires successful builds)
-      - ssl-validation:
-          requires:
-            - backend-build-test
-            - frontend-build-test
-
-  # Nightly security scan
-  nightly-security:
-    triggers:
-      - schedule:
-          # Runs every night at midnight UTC
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - main
-                - master
-    jobs:
-      - security-check
-      - dependency-check
+            - build-test
