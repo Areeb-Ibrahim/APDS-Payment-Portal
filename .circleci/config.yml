@@ -34,4 +34,3 @@ workflows:
   build_and_analyze:
     jobs:
       - sonarcloud-analysis
-S
